@@ -19,7 +19,7 @@ At this moment, the list of implemented metaheuristics is:
 * Simulated Annealing
 
 
-To see the development plans at a glance, all relevant information can be found in the [roadmap](https://github.com/Fynardo/or-testbed/ROADMAP.md/).
+To see the development plans at a glance, all relevant information can be found in the [roadmap](ROADMAP.md).
 
 
 ## Installing
@@ -30,7 +30,7 @@ Since OR-Testbed is coded in pure Python no requirements are needed, just execut
 
 ## Examples and usage
 
-There is no oneliner example, but there is a tutorial in the docs section. Also, check the available [examples](https://github.com/Fynardo/or-testbed/examples/) 
+There is no oneliner example, but there is a tutorial in the docs section. Also, check the available [examples](examples/) 
 where some problems and algorithms are implemented and the usual workflow is showed. 
 
 ## Contributing
