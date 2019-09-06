@@ -1,0 +1,1 @@
+from .tabu import TabuSearch
