@@ -3,6 +3,7 @@
 import time
 from abc import abstractmethod, ABC
 from or_testbed.utils.logger import Logger
+from or_testbed.solvers.factory import make_factory_from
 import copy
 
 
@@ -29,6 +30,16 @@ class Solver(ABC):
         end = time.time() - start
         self.logger.log('Done! Finished in {time} seconds. Objective: {obj}. Feasible: {feasible}\n', time=round(end, 8), obj=solution.objective, feasible=feasible)
         return feasible, solution
+
+    @classmethod
+    def factory(cls, **kwargs):
+        """
+            This method returns a factory able to instantiate objects whenever needed
+
+        :param kwargs: Arguments dict for the class
+        :return: A factory function
+        """
+        return make_factory_from(cls, **kwargs)
 
     @abstractmethod
     def optimize(self):

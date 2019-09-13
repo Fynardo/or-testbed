@@ -2,6 +2,7 @@
 
 import json
 from abc import ABC, abstractmethod
+from or_testbed.solvers.factory import make_factory_from
 
 
 class Solution(ABC):
@@ -14,6 +15,10 @@ class Solution(ABC):
 
     def __init__(self, objective=0):
         self.objective = objective
+
+    @classmethod
+    def factory(cls, **kwargs):
+        return make_factory_from(cls, **kwargs)
 
     @abstractmethod
     def is_feasible(self, in_instance):

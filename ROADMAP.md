@@ -16,17 +16,14 @@ more efficiently.
 
 * GRASP constructive version (basic and multistart approach)
 * Simulated Annealing method (basic and multistart approach)
+* Tabu Search (basic and multistart approach)
 
 
 ## On development
 
 ### Metaheuristic
 
-* Tabu Search
-
 ### Techniques
-
-N/A
 
 ## Future 
 

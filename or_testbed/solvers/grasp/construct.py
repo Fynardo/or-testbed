@@ -1,8 +1,7 @@
 # -*- coding:utf-8 -*-
 
 import or_testbed.solvers.base.solver as base_solver
-from abc import abstractmethod
-import random
+import or_testbed.entities.neighborhood as neighborhood
 
 
 class MultiStartGraspConstruct(base_solver.MultiStartSolver):
@@ -37,12 +36,13 @@ class GraspConstruct(base_solver.Solver):
         Check examples folder to see how to define and interact with GRASP.
     """
 
-    def __init__(self, instance, solution_factory, alpha, debug=True, log_file=None):
+    def __init__(self, instance, solution_factory, grasp_move, alpha, debug=True, log_file=None):
         super().__init__(debug, log_file)
         self.instance = instance
         self.alpha = alpha
         self.solution_factory = solution_factory
         self.solution = self.solution_factory()
+        self.grasp_move = grasp_move
 
     def _filter_candidate_list(self, candidates, costs):
         """
@@ -66,75 +66,31 @@ class GraspConstruct(base_solver.Solver):
         c_max = max(costs)
         return [candidates[i] for i, c in enumerate(costs) if c_min <= c <= c_min + self.alpha * (c_max - c_min)]
 
-    def _make_rcl(self):
+    def _make_rcl(self, candidates):
         """
             This method creates the Restricted Candidates List (RCL). It gets all the candidates, calculate thier costs and filter them according to parameter alpha.
 
         :return: Calculated RCL
         """
-        candidates_list = self._make_candidates_list()
-        cost_list = list(map(self._greedy_function, candidates_list))
-        rcl = self._filter_candidate_list(candidates_list, cost_list)
+        cost_list = [c.fitness(self.solution, self.instance) for c in candidates]
+        rcl = self._filter_candidate_list(candidates, cost_list)
         return rcl
-
-    def _select_candidate(self, rcl):
-        """
-            Selects next candidate to add to the solution from the RCL. It just selects a random candidate by default.
-
-        :param rcl: Restricted Candidates List
-        :return: Selected candidate from RCL
-        """
-        return random.choice(rcl)
 
     def optimize(self):
         self.logger.log('Executing GRASP Construct on instance {} with alpha {}.', self.instance.name, self.alpha)
         self._initialize_solution()
 
-        while self._are_candidates_left():
-            rcl = self._make_rcl()
-            candidate = self._select_candidate(rcl)
-            self._add_candidate(candidate)
+        candidates = self.grasp_move.make_neighborhood(self.solution, self.instance)
+        while candidates:
+            rcl = self._make_rcl(candidates)
+            candidate = neighborhood.select_candidate(neighborhood.strategy_factory('random'), rcl, self.solution, self.instance)
+            self.grasp_move.apply(candidate, self.solution)
+            # self._add_candidate(candidate)
             self.solution.set_objective(self.solution.calculate_objective(self.instance))
+            candidates = self.grasp_move.make_neighborhood(self.solution, self.instance)
 
         feasible = self.solution.is_feasible(self.instance)
         return feasible, self.solution
 
     def _initialize_solution(self):
-        pass
-
-    @abstractmethod
-    def _greedy_function(self, candidate):
-        """
-            This method calculates greedy function value of a candidate. Developer must override this method.
-
-        :param candidate: A candidate to calculate greedy function.
-        :return: Greedy function cost of the candidate.
-        """
-        pass
-
-    @abstractmethod
-    def _are_candidates_left(self):
-        """
-            This method checks if there are more candidates remaining that need to be added to the solution. Developer must override this method.
-
-        :return: True if there are candidates left, False otherwise
-        """
-        return False
-
-    @abstractmethod
-    def _make_candidates_list(self):
-        """
-            This method calculates the list of remaining candidates that need to be added to the solution. Developer must override this method.
-
-        :return: A remaining candidates list.
-        """
-        pass
-
-    @abstractmethod
-    def _add_candidate(self, candidate):
-        """
-            This method adds a candidate to the solution structure. Developer must override this method.
-
-        :param candidate: Selected candidate to be added to the solution
-        """
         pass

@@ -17,6 +17,7 @@ At this moment, the list of implemented metaheuristics is:
 
 * GRASP
 * Simulated Annealing
+* Tabu Search
 
 
 To see the development plans at a glance, all relevant information can be found in the [roadmap](ROADMAP.md).

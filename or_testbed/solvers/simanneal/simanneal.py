@@ -2,6 +2,7 @@
 
 import or_testbed.solvers.simanneal.exceptions
 import or_testbed.solvers.base.solver as base_solver
+import or_testbed.entities.neighborhood as neighborhood
 import math
 import random
 import copy
@@ -39,50 +40,51 @@ class SimAnneal(base_solver.Solver):
 
         :return: A movement to be made.
         """
-        return random.choices(population=self.available_movs, cum_weights=self.movs_weight)[0]
 
-    def _make_move(self, new_mov_factory, in_solution):
+        next_mov_class = random.choices(population=self.available_movs, cum_weights=self.movs_weight)[0]
+        return next_mov_class
+
+    def _make_move(self, next_mov, candidate, in_solution):
         """
             Executes a certain move, thus calculating a new neighbour solution.
 
-        :param new_mov_factory: A movement factory that the algorithm instantiates and executes.
+        :param next_mov: A movement factory that the algorithm instantiates and executes.
         :param in_solution: The solution to make the move to and calculate a new neighbor.
         :return: The new neighbor solution.
         """
-        new_mov = new_mov_factory()
-        neighbour = new_mov.execute(in_solution)
-        return neighbour
+        new_sol = next_mov.apply(candidate, in_solution)
+        new_sol.set_objective(new_sol.calculate_objective(self.instance))
+        return new_sol
 
     def optimize(self):
         self.logger.log('Executing Simulated Annealing from {}ºC to {}ºC, {} rate', self.max_temp, self.min_temp, self.alpha)
         self.logger.log('Initial Solution Objective: {}', self.initial_solution.objective)
-        # TODO Copying a solution is very expensive in computational costs, it should be nice to define some backtracking approach. However the concrete approach
-        # TODO  must be implemented by the developer.
+
         best_sol = copy.deepcopy(self.initial_solution)
         current_sol = copy.deepcopy(self.initial_solution)
         current_temp = self.max_temp
         while current_temp >= self.min_temp:
             try:
                 next_mov = self._select_movement()
-                new_sol = self._make_move(next_mov, copy.deepcopy(current_sol))
-                new_sol.set_objective(new_sol.calculate_objective(self.instance))
-
-                if new_sol.compare_to(best_sol) > 0:
-                    best_sol = copy.deepcopy(new_sol)
-
-                improvement = new_sol.compare_to(current_sol)
-                if improvement > 0:
-                    current_sol = new_sol
-                    self.logger.log('Improved solution by: {}. Move accepted', improvement)
-                elif improvement < 0:
+                candidates = next_mov.make_neighborhood(current_sol, self.instance)
+                candidate = neighborhood.select_candidate(neighborhood.strategy_factory('random'), candidates, current_sol, self.instance)
+                fitness = candidate.fitness(current_sol, self.instance)
+                if fitness > 0:
+                    self._make_move(next_mov, candidate, current_sol)
+                    self.logger.log('Improved solution by: {}. Move accepted', fitness)
+                    if current_sol.compare_to(best_sol) > 0:
+                        best_sol = copy.deepcopy(current_sol)
+                elif fitness < 0:
                     # Sometimes bad solutions are accepted.
-                    threshold = math.exp(improvement / current_temp)
+                    threshold = math.exp(fitness / current_temp)
                     if random.random() < threshold:
-                        current_sol = new_sol
-                        self.logger.log('Worsened solution by: {}. Move Accepted', improvement)
+                        self._make_move(next_mov, candidate, current_sol)
+                        self.logger.log('Worsened solution by: {}. Move Accepted', fitness)
                     else:
-                        self.logger.log('Worsened solution by: {}. Move Rejected', improvement)
+                        self.logger.log('Worsened solution by: {}. Move Rejected', fitness)
+
                 current_temp *= self.alpha
+
             except or_testbed.solvers.simanneal.exceptions.MovementException:
                 current_temp *= self.alpha
                 continue

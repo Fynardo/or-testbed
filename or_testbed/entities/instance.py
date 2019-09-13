@@ -10,23 +10,44 @@ class Instance:
     """
 
     def __init__(self, name, data=None):
-        self.name = name
-        self.data = data
+        self._name = name
+        self._data = data
 
-    def set_data(self, in_data):
+    @property
+    def name(self):
+        """
+        Basic getter for instance name
+
+        :return: Instance name
+        """
+        return self._name
+
+    @name.setter
+    def name(self, in_name):
+        """
+            Basic setter for instance name
+
+        :return: Instance name
+        """
+        self._name = in_name
+
+    @property
+    def data(self):
+        """
+            Basic getter for instance input data
+
+        :return: Instance input data, its concrete structure is up to the developer.
+        """
+        return self._data
+
+    @data.setter
+    def data(self, in_data):
         """
             Basic setter for instance input data.
 
         :param in_data: Instance input data, its concrete structure is up to the developer.
         """
-        self.data = in_data
-
-    def get_data(self):
-        """
-        Basic getter for instance input data
-
-        :return: Instance input data, its concrete structure is up to the developer.
-        """
+        self._data = in_data
 
     def from_file(self, path):
         """

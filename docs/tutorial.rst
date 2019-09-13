@@ -50,11 +50,11 @@ In OR-Testbed, three things are needed to solve a problem:
 of a solution and calculating its objective. In TSP, instances will have information about cities and distances.
 
 2. A **Solution**. Solution objects store the obtained solution for some problem, its internal structure depends on the problem itself,
-but all solutions in OR-Testbed share share a value called **objective**, that representes the quality of the solution. In TSP this objective
+but all solutions in OR-Testbed share share a value called **objective**, that represents the quality of the solution. In TSP this objective
 is the cost of the calculated trip.
 
 3. A **Solver**. The solver is the one that does the work, this is, the algorithm itself. Each solver implements one metaheuristic or a variation of
-a metaheuristic. In TSP, we will need to implement some methods of the solvers in order to adapt their logic to TSP.
+a metaheuristic. In TSP, we will need to implement some methods related to the solvers in order to adapt their logic to TSP.
 
 
 Defining an instance
@@ -168,70 +168,56 @@ Where **c(e)** is the cost of candidate **e** (based on the greedy function), **
 What this means is that when alpha is 0 only candidates with minimum cost are taken into account (pure greedy approach). On the other hand, when
 alpha is 1 all candidates are taken into account (pure randomness approach). What alpha does is to set the confidence we have in our greedy function.
 
-Anyhow, to solve a problem like TSP we must implement some logic (like the greedy function). Basically we need to override the methods
-that are not part of the core of GRASP (this happens with every metaheuristic in OR-Testbed). In this case, we must override
-``initialize_solution`` (though if you don't need to initialize anything you may pass), ``greedy_function``, ``make_candidates_list``,
-``add_candidate`` and ``are_candidates_left``. The code needed to implement GRASP for creating a solution for our TSP is the following
+Anyhow, to solve our TSP problem we must implement some other logic. GRASP workflow (as lots of other metaheuristics) is about selecting candidates and making small changes
+to solutions in the best trajectory as possible. In OR-Testbed we implement this logic within two entities: candidates and movements.
+
+Lets start with movements. As stated earlier, multiple metaheuristics work by exploring neighborhoods and trying to find paths that eventually may guide them to good solutions.
+This neighborhoods are defined by the moves. For example, in GRASP our only move is to add cities to the sequence until all cities are covered.
+The neighborhood (the set of candidates to take into account) related to that move are the cities left to be added to the sequence.
+
+Lets see an example, this could be the GRASP move and candidate definition for TSP:
+
+.. code-block:: python
+
+    class TSPGraspCandidate(base_candidate.Candidate):
+        def __init__(self, city):
+            self.city = city
+
+        def fitness(self, solution, instance):
+            last_visited = solution.cities[-1]
+            return instance.data[last_visited][self.city]
+
+    class TSPGraspMove(base_move.Move):
+        @staticmethod
+        def make_neighborhood(solution, instance):
+            return [TSPGraspCandidate(city=c) for c in instance.data[solution.cities[-1]].keys() if c not in solution.cities]
+
+        @staticmethod
+        def apply(in_candidate, in_solution):
+            in_solution.cities.append(in_candidate.city)
+            return in_solution
+
+
+Candidates store internal structure and the fitness function, which is the cost of adding the candidate city as the next step on our sequence.
+On the other hand, neighborhoods are just a candidates list, in this case, made by the cities not added yet to the solution.
+To apply this move, we just append the candidate to the solution.
+
+Executing our solver
+^^^^^^^^^^^^^^^^^^^^
+
+All the needed components are implemented now, that means that there's only one more step, executing it all.
 
 .. code-block:: python
 
     import or_testbed.solvers.grasp as base_grasp
 
-
-    class TSPGrasp(base_grasp.GraspConstruct):
-        def __init__(self, instance, solution_factory, alpha, debug=True, log_file=None):
-            super().__init__(instance, solution_factory, alpha, debug, log_file)
-            self.visited = set()
-            self.remaining = set(self.instance.data.keys())
-            self.last_visited = self.solution.initial_city
-
-        def _initialize_solution(self):
-            self.visited.add(self.solution.initial_city)
-            self.remaining.remove(self.solution.initial_city)
-
-        def _greedy_function(self, candidate):
-            return self.instance.data[self.last_visited][candidate]
-
-        def _are_candidates_left(self):
-            return True if self.remaining else False
-
-        def _add_candidate(self, candidate):
-            self.solution.cities.append(candidate)
-            self.visited.add(candidate)
-            self.last_visited = candidate
-            self.remaining.remove(candidate)
-
-        def _make_candidates_list(self):
-            return [c for c in self.instance.data[self.last_visited].keys() if c not in self.visited]
-
-
-At solver initialization, we set some helpful values like visited cities and remaining cities. Note that solvers have access to instance and solution objects.
-
-Initializing the solution is not always needed, but makes sense in this one. The greedy function can be an extremely complicated one, in our case,
-is a very naive function, it just takes the distance between the last visited solution and the candidate.
-The other three functions are related to the candidates list, first to check if there are candidates left we just check it there's some city
-remaining to be visited. To add a candidate we append the candidate to the solution cities sequence and update our values accordingly. Last, to make
-the candidates list we take into account all cities not visited (the remaining ones).
-
-Note that all methods are seen as private (that's why their name start with an underscore ``_``), this means that the solver will call the appropriate methods when needed.
-
-Executing our solver
-^^^^^^^^^^^^^^^^^^^^
-
-All the three needed components are implemented now (solution, instance and solver), that means that there's only one more step, executing it all.
-
-.. code-block:: python
-
-    from or_testbed.solvers.factory import make_factory_from
-
-
     if __name__ == '__main__':
         # Instantiate instance
         my_tsp = TSPInstance(instance_name, cities)
         # Create factory from solution
-        tsp_solution_factory = make_factory_from(TSPSolution, initial_city='A')
-        # Instantiate GRASP solver (with parameter alpha = 0.0, greedy approach)
-        tsp_solver = TSPGrasp(my_tsp, solution_factory=tsp_solution_factory, alpha=0.0)
+        tsp_solution_factory = TSPSolution.factory(initial_city='A')
+        # Instantiate GRASP solver (with parameter alpha = 0.0, greedy approach) passing our move.
+        tsp_solver = base_grasp.GraspConstruct(tsp, alpha=0.0, solution_factory=tsp_solution_factory, grasp_move=TSPGraspMove)
         # Run the solver
         feasible, solution = tsp_solver.solve()
         # Retrieve the cities sequence and the objective value (the cost of the trip)
@@ -244,20 +230,16 @@ the solution found. In fact, a tuple is returned, first element (``feasible``) i
 second element is the solution itself.
 Note that the solution is not instantiated directly, what we do is to create a factory around it, but its the same syntax.
 What this means is that solvers usually need to be able to create new solutions, so we want to give them a way to do so, thats what
-``make_factory_from`` does. The function signature is:
+``factory`` class method does.
 
-.. autofunction:: or_testbed.solvers.factory.make_factory_from
+Once executed we will get a solution for our problem, an easily improvable one to be fair.
 
-So, basically it expects a class reference (``cls``) and the arguments to instantiate that class, in the same way as a normal instantiation.
-
-Once executed we will get a solution for our problem in basically no time, thats fine, but the solution is easily improvable.
-
-Improving our solver
-^^^^^^^^^^^^^^^^^^^^
+Improving our solution
+^^^^^^^^^^^^^^^^^^^^^^
 
 In our previous example, we solved the problem with alpha being 0.0, this means that there is no randomness, so the greedy function will rule it all.
 We could set another value to alpha (like 0.3) so the solver would be able to explore more solutions. That's a fine approximation, but with
-randomness involved we usually want to try and stabilize our solutions. This is where **multistart** comes in, this technique lets us run
+randomness involved we usually want to try and stabilize our solutions. This is where **multistart** techniques come in, this lets us run
 our solvers a number of times and get the best result.
 
 Lets see how we do it with OR-Testbed:
@@ -270,9 +252,9 @@ Lets see how we do it with OR-Testbed:
         # Instantiate instance
         my_tsp = TSPInstance(instance_name, cities)
         # Make a solution factory as before
-        tsp_solution_factory = make_factory_from(TSPSolution, initial_city='A')
+        tsp_solution_factory = TSPSolution.factory(initial_city='A')
         # Since we want to execute multiple GRASP instances, we also make a factory from it
-        tsp_grasp_factory = make_factory_from(TSPGrasp, instance=my_tsp, alpha=0.3, solution_factory=tsp_solution_factory)
+        tsp_grasp_factory = base_grasp.GraspConstruct.factory(instance=tsp, alpha=0.3, solution_factory=tsp_solution_factory, grasp_move=TSPGraspMove)
         # Instantiate our multistart version of GRASP with 25 iterations
         tsp_multistart = base_grasp.MultiStartGraspConstruct(iters=25, inner_grasp_factory=tsp_grasp_factory)
         # Run the solver
@@ -281,7 +263,7 @@ Lets see how we do it with OR-Testbed:
         print('Salesman will visit: {}'.format(ms_solution.cities))
         print('Total cost: {}'.format(ms_solution.get_objective()))
 
-Running a multistart solver is almost the same as running the proper solver, the main difference is that now, for the *inner solver* (TSPGrasp)
+Running a multistart solver is almost the same as running the proper solver, the main difference is that now, for the *inner solver* (GRASP)
 we don't want an instance, we need a factory, because the multistart solver is going to instantiate it many times. The good thing is that
 our solution now is better (the optimal one in fact).
 
@@ -300,7 +282,7 @@ We can set that with:
 
 .. code-block:: python
 
-    tsp_grasp_factory = make_factory_from(TSPGrasp, instance=my_tsp, alpha=0.3, solution_factory=tsp_solution_factory, debug=False)
+    tsp_grasp_factory = base_grasp.GraspConstruct.factory(instance=tsp, alpha=0.3, solution_factory=tsp_solution_factory, grasp_move=TSPGraspMove, debug=False)
 
 That's the same line from the example but with the parameter **debug** set to ``False``, that prevents any output to be printed.
 Note that we can set debug parameter to ``True`` or ``False`` to any solver.
@@ -309,8 +291,7 @@ Of course we may not want to see the output but to store it to check later, we c
 
 .. code-block:: python
 
-    tsp_grasp_factory = make_factory_from(TSPGrasp, instance=my_tsp, alpha=0.3, solution_factory=tsp_solution_factory, debug=False, log_file='log.txt')
-
+    tsp_grasp_factory = base_grasp.GraspConstruct.factory(instance=tsp, alpha=0.3, solution_factory=tsp_solution_factory, grasp_move=TSPGraspMove, debug=False, log_file='log.txt')
 
 That will not print the output but store it to a text file called *log.txt*.
 

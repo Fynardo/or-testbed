@@ -1,5 +1,7 @@
 # -*- coding:utf-8 -*-
 
+# TODO Adapt this to work also with *args
+
 
 def make_factory_from(cls, **kwargs):
     """

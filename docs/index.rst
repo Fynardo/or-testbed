@@ -46,8 +46,14 @@ Utilities
    :maxdepth: 2
 
    logging
-   factories
 
+Changelog
+---------
+
+.. toctree::
+   :maxdepth: 2
+
+   changelog
 
 
 .. Indices and tables

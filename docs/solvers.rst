@@ -12,7 +12,7 @@ Base Solvers
 
 .. autoclass:: or_testbed.solvers.base.solver.MultiStartSolver
 
-Grasp
+GRASP
 -----
 .. _grasp_solver:
 
@@ -34,3 +34,16 @@ Simulated Annealing
 
 .. autoclass:: or_testbed.solvers.simanneal.MultiStartSimAnneal
     :members:
+
+
+Tabu Search
+-----------
+.. _tabu_search:
+
+.. autoclass:: or_testbed.solvers.tabusearch.TabuSearch
+    :members:
+    :private-members:
+
+.. autoclass:: or_testbed.solvers.tabusearch.MultiStartTabuSearch
+    :members:
+    :private-members:

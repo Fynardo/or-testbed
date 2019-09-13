@@ -1,8 +1,9 @@
 # -*- coding:utf-8 -*-
 
 """
-    TSP Definition.
+    TSP Definition for testing purposes.
 
+    Yes, it's basically the same code as in the examples replicated here, maybe not the smartest idea out there.
 """
 
 import or_testbed.entities.solution as base_solution
@@ -28,6 +29,29 @@ class TSPSolution(base_solution.Solution):
 
     def calculate_objective(self, in_instance):
         return sum([in_instance.data[a][b] for a,b in zip(self.cities, self.cities[-1:] + self.cities[:-1])])
+
+
+class TSPGraspCandidate(base_candidate.Candidate):
+    def __init__(self, city):
+        self.city = city
+
+    def fitness(self, solution, instance):
+        last_visited = solution.cities[-1]
+        return instance.data[last_visited][self.city]
+
+
+class TSPGraspMove(base_move.Move):
+    """
+        When constructing a solution, GRASP only has one move, that is to add candidates to the solution.
+    """
+    @staticmethod
+    def make_neighborhood(solution, instance):
+        return [TSPGraspCandidate(city=c) for c in instance.data[solution.cities[-1]].keys() if c not in solution.cities]
+
+    @staticmethod
+    def apply(in_candidate, in_solution):
+        in_solution.cities.append(in_candidate.city)
+        return in_solution
 
 
 class SwapCitiesCandidate(base_candidate.Candidate):
@@ -63,6 +87,3 @@ class SwapCitiesMove(base_move.Move):
         in_solution.cities[first_city], in_solution.cities[second_city] = in_solution.cities[second_city], in_solution.cities[first_city]
         return in_solution
 
-
-cities = {'A': {'B': 3, 'C': 5, 'D': 6, 'E': 2}, 'B': {'A': 3, 'C': 25, 'D': 10, 'E': 5}, 'C': {'A': 5, 'B': 25, 'D': 3, 'E': 4}, 'D': {'A': 6, 'B': 10, 'C': 3, 'E': 1}, 'E': {'A': 2, 'B': 5, 'C': 4, 'D': 1}}
-tsp = TSPInstance('tsp_example', cities)
