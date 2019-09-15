@@ -79,14 +79,16 @@ Lets code a small TSP example with 5 cities (named from 'A' to 'E'):
 
     instance_name = 'tsp_example'
     cities = {'A': {'B': 3, 'C': 5, 'D': 6, 'E': 2}, 'B': {'A': 3, 'C': 25, 'D': 10, 'E': 5}, 'C': {'A': 5, 'B': 25, 'D': 3, 'E': 4}, 'D': {'A': 6, 'B': 10, 'C': 3, 'E': 1}, 'E': {'A': 2, 'B': 5, 'C': 4, 'D': 1}}
+    initial_city = 'A'
 
 As you can see, cities information are codified with a adjacency list using a python dict, this may not be an optimal approximation but its fine for an example. Now we can instantiate our TSPInstance class as follows:
 
 .. code-block:: python
 
     class TSPInstance(base_instance.Instance):
-        def __init__(self, name, data=None):
+        def __init__(self, name, data, initial_city):
             super().__init__(name, data)
+            self.initial_city = initial_city
 
 Since we are not overriding any logic, we just extend base instance class. In this example we could use the base class directly but chances are that
 we usually need to adapt something (like the data loader).
@@ -123,9 +125,20 @@ Now, for TSP we want two things: a starting city and the sequence of cities that
             self.cities = [initial_city]
 
         def is_feasible(self, in_instance):
-            return set(self.cities) == set(in_instance.data.keys())
+            """
+                A solution is feasible if the salesman visits every city once and starts and finishes in the city marked as initial.
+            """
+            predicates = [
+                len(self.cities) == len(in_instance.data.keys()),
+                set(self.cities) == set(in_instance.data.keys()),
+                self.cities[0] == in_instance.initial_city,
+            ]
+            return all(predicates)
 
         def calculate_objective(self, in_instance):
+            """
+                Objective value is the sum of the distances between cities (also taking into account returning to initial city).
+            """
             return sum([in_instance.data[a][b] for a,b in zip(self.cities, self.cities[-1:] + self.cities[:-1])])
 
 Inside the ``__init__`` function we initialize the solution (the sequence of cities to visit) with the starting city. Note that since there is no need
@@ -213,16 +226,15 @@ All the needed components are implemented now, that means that there's only one 
 
     if __name__ == '__main__':
         # Instantiate instance
-        my_tsp = TSPInstance(instance_name, cities)
+        my_tsp = TSPInstance(instance_name, cities, initial_city)
         # Create factory from solution
-        tsp_solution_factory = TSPSolution.factory(initial_city='A')
+        tsp_solution_factory = TSPSolution.factory(initial_city=my_tsp.initial_city)
         # Instantiate GRASP solver (with parameter alpha = 0.0, greedy approach) passing our move.
         tsp_solver = base_grasp.GraspConstruct(tsp, alpha=0.0, solution_factory=tsp_solution_factory, grasp_move=TSPGraspMove)
         # Run the solver
         feasible, solution = tsp_solver.solve()
         # Retrieve the cities sequence and the objective value (the cost of the trip)
         print('Salesman will visit: {}'.format(solution.cities))
-        print('Total cost: {}'.format(solution.get_objective()))
 
 
 Basically we instantiate the instance, the solution, the solver and then we call ``solve`` method, that triggers the solver and returns
@@ -250,9 +262,9 @@ Lets see how we do it with OR-Testbed:
 
     if __name__ == '__main__':
         # Instantiate instance
-        my_tsp = TSPInstance(instance_name, cities)
+        my_tsp = TSPInstance(instance_name, cities, initial_city)
         # Make a solution factory as before
-        tsp_solution_factory = TSPSolution.factory(initial_city='A')
+        tsp_solution_factory = TSPSolution.factory(initial_city=my_tsp.initial_city)
         # Since we want to execute multiple GRASP instances, we also make a factory from it
         tsp_grasp_factory = base_grasp.GraspConstruct.factory(instance=tsp, alpha=0.3, solution_factory=tsp_solution_factory, grasp_move=TSPGraspMove)
         # Instantiate our multistart version of GRASP with 25 iterations
@@ -261,7 +273,6 @@ Lets see how we do it with OR-Testbed:
         feasible, ms_solution = tsp_multistart.solve()
         # Retrieve the cities sequence and the objective value (the cost of the trip) of the best solution found
         print('Salesman will visit: {}'.format(ms_solution.cities))
-        print('Total cost: {}'.format(ms_solution.get_objective()))
 
 Running a multistart solver is almost the same as running the proper solver, the main difference is that now, for the *inner solver* (GRASP)
 we don't want an instance, we need a factory, because the multistart solver is going to instantiate it many times. The good thing is that

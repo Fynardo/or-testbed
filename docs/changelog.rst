@@ -3,6 +3,12 @@
 Change log
 ----------
 
+Version 1.0.1
+^^^^^^^^^^^^^
+Released in 14/9/2019
+
+* Minor fixes in examples
+
 Version 1.0.0
 ^^^^^^^^^^^^^
 Released in 13/9/2019.

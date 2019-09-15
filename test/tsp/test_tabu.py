@@ -1,12 +1,12 @@
 from .definition import *
-from .instances import example
+from .instances import example_cities, example_initial_city
 import or_testbed.solvers.tabusearch as base_tabu
 import or_testbed.solvers.grasp as base_grasp
 import random
 import pytest
 
-tsp_instance = TSPInstance('tsp_example', example)
-tsp_solution_factory = TSPSolution.factory(initial_city='A')
+tsp_instance = TSPInstance('tsp_example', example_cities, example_initial_city)
+tsp_solution_factory = TSPSolution.factory(initial_city=tsp_instance.initial_city)
 
 
 @pytest.fixture(autouse=True)

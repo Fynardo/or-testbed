@@ -16,3 +16,4 @@ _, initial_sol = compute_grasp_solution()
 tsp_moves = [SwapCitiesMove]
 tsp_simanneal = simanneal.SimAnneal(tsp, initial_sol, tsp_moves, [1], 10, 0.1, 0.9, debug=True)
 feasible, improved_sol = tsp_simanneal.solve()
+print('Salesman will visit: {}'. format(improved_sol.cities))

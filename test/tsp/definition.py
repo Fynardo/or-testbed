@@ -14,8 +14,9 @@ import itertools
 
 
 class TSPInstance(base_instance.Instance):
-    def __init__(self, name, data=None):
+    def __init__(self, name, data, initial_city):
         super().__init__(name, data)
+        self.initial_city = initial_city
 
 
 class TSPSolution(base_solution.Solution):
@@ -25,10 +26,15 @@ class TSPSolution(base_solution.Solution):
         self.cities = [initial_city]
 
     def is_feasible(self, in_instance):
-        return set(self.cities) == set(in_instance.data.keys())
+        predicates = [
+            len(self.cities) == len(in_instance.data.keys()),
+            set(self.cities) == set(in_instance.data.keys()),
+            self.cities[0] == in_instance.initial_city,
+        ]
+        return all(predicates)
 
     def calculate_objective(self, in_instance):
-        return sum([in_instance.data[a][b] for a,b in zip(self.cities, self.cities[-1:] + self.cities[:-1])])
+        return sum([in_instance.data[a][b] for a, b in zip(self.cities, self.cities[-1:] + self.cities[:-1])])
 
 
 class TSPGraspCandidate(base_candidate.Candidate):
@@ -41,9 +47,6 @@ class TSPGraspCandidate(base_candidate.Candidate):
 
 
 class TSPGraspMove(base_move.Move):
-    """
-        When constructing a solution, GRASP only has one move, that is to add candidates to the solution.
-    """
     @staticmethod
     def make_neighborhood(solution, instance):
         return [TSPGraspCandidate(city=c) for c in instance.data[solution.cities[-1]].keys() if c not in solution.cities]
@@ -77,6 +80,7 @@ class SwapCitiesMove(base_move.Move):
     @staticmethod
     def make_neighborhood(solution, instance):
         swaps = itertools.combinations(instance.data.keys(), 2)
+        swaps = filter(lambda x: x[0] != instance.initial_city and x[1] != instance.initial_city, swaps)
         return [SwapCitiesCandidate(city1=s[0], city2=s[1]) for s in swaps]
 
     @staticmethod
@@ -86,4 +90,3 @@ class SwapCitiesMove(base_move.Move):
 
         in_solution.cities[first_city], in_solution.cities[second_city] = in_solution.cities[second_city], in_solution.cities[first_city]
         return in_solution
-
