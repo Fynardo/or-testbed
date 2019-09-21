@@ -2,6 +2,7 @@
 
 import or_testbed.solvers.base.solver as base_solver
 import or_testbed.entities.neighborhood as neighborhood
+from or_testbed.utils.logger import LogLevel
 
 
 class MultiStartGraspConstruct(base_solver.MultiStartSolver):
@@ -11,9 +12,9 @@ class MultiStartGraspConstruct(base_solver.MultiStartSolver):
         This is just an extension of base multistart solver. It works fine out of the box.
     """
 
-    def __init__(self, iters, inner_grasp_factory, debug=True, log_file=None):
-        super().__init__(iters, inner_grasp_factory, debug=debug, log_file=log_file)
-        self.name = 'MultiStartGRASP'
+    def __init__(self, iters, inner_grasp_factory, debug=True, log_file=None, log_level=LogLevel.ALL):
+        super().__init__(iters, inner_grasp_factory, debug=debug, log_file=log_file, log_level=log_level)
+        self.name = 'MultiStart GRASP Construct'
 
 
 class GraspConstruct(base_solver.Solver):
@@ -36,13 +37,14 @@ class GraspConstruct(base_solver.Solver):
         Check examples folder to see how to define and interact with GRASP.
     """
 
-    def __init__(self, instance, solution_factory, grasp_move, alpha, debug=True, log_file=None):
-        super().__init__(debug, log_file)
+    def __init__(self, instance, solution_factory, grasp_move, alpha, debug=True, log_file=None, log_level=LogLevel.ALL):
+        super().__init__(debug, log_file, log_level)
         self.instance = instance
         self.alpha = alpha
         self.solution_factory = solution_factory
         self.solution = self.solution_factory()
         self.grasp_move = grasp_move
+        self.name = "GRASP Construct"
 
     def _filter_candidate_list(self, candidates, costs):
         """
@@ -77,7 +79,7 @@ class GraspConstruct(base_solver.Solver):
         return rcl
 
     def optimize(self):
-        self.logger.log('Executing GRASP Construct on instance {} with alpha {}.', self.instance.name, self.alpha)
+        self.logger.log(LogLevel.INFO, 'Executing {} on instance {} with alpha {}.', self.name, self.instance.name, self.alpha)
         self._initialize_solution()
 
         candidates = self.grasp_move.make_neighborhood(self.solution, self.instance)

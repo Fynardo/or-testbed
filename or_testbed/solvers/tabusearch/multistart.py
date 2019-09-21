@@ -9,7 +9,7 @@ class MultiStartTabuSearch(base_solver.MultiStartSolver):
 
         This is just an extension of base multistart solver. It works fine out of the box.
     """
-    def __init__(self, iters, inner_simanneal_factory, debug=True, log_file=None):
-        super().__init__(iters, inner_simanneal_factory, debug=debug, log_file=log_file)
-        self.name = 'MultiStartTabuSearch'
+    def __init__(self, iters, inner_tabusearch_factory, debug=True, log_file=None):
+        super().__init__(iters, inner_tabusearch_factory, debug=debug, log_file=log_file)
+        self.name = 'MultiStart Tabu Search'
 

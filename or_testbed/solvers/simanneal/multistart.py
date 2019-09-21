@@ -11,5 +11,5 @@ class MultiStartSimAnneal(base_solver.MultiStartSolver):
     """
     def __init__(self, iters, inner_simanneal_factory, debug=True, log_file=None):
         super().__init__(iters, inner_simanneal_factory, debug=debug, log_file=log_file)
-        self.name = 'MultiStartSimulatedAnnealing'
+        self.name = 'MultiStart Simulated Annealing'
 

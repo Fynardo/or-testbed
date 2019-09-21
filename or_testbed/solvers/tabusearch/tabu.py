@@ -3,6 +3,7 @@
 import or_testbed.solvers.base.solver as base_solver
 from .tabulist import TabuList
 import or_testbed.entities.neighborhood as neighborhood
+from or_testbed.utils.logger import LogLevel
 import copy
 import random
 
@@ -24,8 +25,8 @@ class TabuSearch(base_solver.Solver):
 
         Check examples folder to see how to define and interact with tabu search.
     """
-    def __init__(self, instance, initial_solution, available_movs, movs_weight, tabulen=10, iters=10, candidate_selection='first', debug=True, log_file=None):
-        super().__init__(debug, log_file)
+    def __init__(self, instance, initial_solution, available_movs, movs_weight, tabulen=10, iters=10, candidate_selection='first', debug=True, log_file=None, log_level=LogLevel.ALL):
+        super().__init__(debug, log_file, log_level=log_level)
         self.instance = instance
         self.initial_sol = initial_solution
         self.available_movs = available_movs
@@ -35,10 +36,11 @@ class TabuSearch(base_solver.Solver):
         self.iters = iters
         self.candidate_selection = candidate_selection
         self.candidates_strategy = neighborhood.strategy_factory(self.candidate_selection)
+        self.name = "Tabu Search"
 
     def optimize(self):
-        self.logger.log('Executing Tabu Search, {} iterations. Candidate selection strategy: {}', self.iters, self.candidate_selection)
-        self.logger.log('Initial Solution Objective: {}', self.initial_sol.objective)
+        self.logger.log(LogLevel.INFO, 'Executing {}, {} iterations. Candidate selection strategy: {}', self.name, self.iters, self.candidate_selection)
+        self.logger.log(LogLevel.INFO, 'Initial Solution Objective: {}', self.initial_sol.objective)
 
         best_sol = copy.deepcopy(self.initial_sol)
         current_sol = copy.deepcopy(self.initial_sol)
@@ -48,7 +50,7 @@ class TabuSearch(base_solver.Solver):
             candidates = next_mov_class.make_neighborhood(current_sol, self.instance)
             cost, candidate = neighborhood.select_candidate(self.candidates_strategy, candidates, current_sol, self.instance)
             if candidate not in self.tabu:
-                self.logger.log('Iter {}. Candidate: {} ({})', iter, candidate, cost)
+                self.logger.log(LogLevel.DEBUG, 'Iter {}. Candidate: {} ({})', iter, candidate, cost)
                 self.tabu.append(candidate)
                 current_sol = next_mov_class.apply(candidate, current_sol)
                 current_sol.set_objective(current_sol.calculate_objective(self.instance))

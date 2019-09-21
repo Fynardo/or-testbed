@@ -6,6 +6,7 @@ import or_testbed.entities.neighborhood as neighborhood
 import math
 import random
 import copy
+from or_testbed.utils.logger import LogLevel
 
 
 class SimAnneal(base_solver.Solver):
@@ -24,8 +25,8 @@ class SimAnneal(base_solver.Solver):
 
         Check examples folder to see how to define and interact with simulated annealing.
     """
-    def __init__(self, instance, initial_solution, available_movs, movs_weight, max_temp, min_temp, alpha, debug=True, log_file=None):
-        super().__init__(debug, log_file)
+    def __init__(self, instance, initial_solution, available_movs, movs_weight, max_temp, min_temp, alpha, debug=True, log_file=None, log_level=LogLevel.ALL):
+        super().__init__(debug, log_file, log_level)
         self.instance = instance
         self.initial_solution = initial_solution
         self.available_movs = available_movs
@@ -33,6 +34,7 @@ class SimAnneal(base_solver.Solver):
         self.max_temp = max_temp
         self.min_temp = min_temp
         self.alpha = alpha
+        self.name = "Simulated Annealing"
 
     def _select_movement(self):
         """
@@ -57,8 +59,8 @@ class SimAnneal(base_solver.Solver):
         return new_sol
 
     def optimize(self):
-        self.logger.log('Executing Simulated Annealing from {}ºC to {}ºC, {} rate', self.max_temp, self.min_temp, self.alpha)
-        self.logger.log('Initial Solution Objective: {}', self.initial_solution.objective)
+        self.logger.log(LogLevel.INFO, 'Executing Simulated Annealing from {}ºC to {}ºC, {} rate', self.max_temp, self.min_temp, self.alpha)
+        self.logger.log(LogLevel.INFO, 'Initial Solution Objective: {}', self.initial_solution.objective)
 
         best_sol = copy.deepcopy(self.initial_solution)
         current_sol = copy.deepcopy(self.initial_solution)
@@ -71,7 +73,7 @@ class SimAnneal(base_solver.Solver):
                 fitness = candidate.fitness(current_sol, self.instance)
                 if fitness > 0:
                     self._make_move(next_mov, candidate, current_sol)
-                    self.logger.log('Improved solution by: {}. Move accepted', fitness)
+                    self.logger.log(LogLevel.DEBUG, 'Improved solution by: {}. Move accepted', fitness)
                     if current_sol.compare_to(best_sol) > 0:
                         best_sol = copy.deepcopy(current_sol)
                 elif fitness < 0:
@@ -79,9 +81,9 @@ class SimAnneal(base_solver.Solver):
                     threshold = math.exp(fitness / current_temp)
                     if random.random() < threshold:
                         self._make_move(next_mov, candidate, current_sol)
-                        self.logger.log('Worsened solution by: {}. Move Accepted', fitness)
+                        self.logger.log(LogLevel.DEBUG, 'Worsened solution by: {}. Move Accepted', fitness)
                     else:
-                        self.logger.log('Worsened solution by: {}. Move Rejected', fitness)
+                        self.logger.log(LogLevel.DEBUG, 'Worsened solution by: {}. Move Rejected', fitness)
 
                 current_temp *= self.alpha
 
