@@ -3,6 +3,13 @@
 Change log
 ----------
 
+Version 1.0.2
+^^^^^^^^^^^^^
+Released in 21/9/2019
+
+* Added levels to logger system
+
+
 Version 1.0.1
 ^^^^^^^^^^^^^
 Released in 14/9/2019
