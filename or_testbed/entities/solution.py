@@ -17,8 +17,8 @@ class Solution(ABC):
         self.objective = objective
 
     @classmethod
-    def factory(cls, **kwargs):
-        return make_factory_from(cls, **kwargs)
+    def factory(cls, *args, **kwargs):
+        return make_factory_from(cls, *args, **kwargs)
 
     @abstractmethod
     def is_feasible(self, in_instance):

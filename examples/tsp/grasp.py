@@ -35,7 +35,7 @@ class TSPGraspMove(base_move.Move):
 
 
 def compute_grasp_solution():
-    tsp_solution_factory = TSPSolution.factory(initial_city=tsp.initial_city)
+    tsp_solution_factory = TSPSolution.factory(tsp.initial_city)
     tsp_solver = base_grasp.GraspConstruct(tsp, alpha=0.0, solution_factory=tsp_solution_factory, grasp_move=TSPGraspMove)
     feasible, solution = tsp_solver.solve()
     return feasible, solution

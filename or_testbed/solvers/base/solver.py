@@ -33,14 +33,15 @@ class Solver(ABC):
         return feasible, solution
 
     @classmethod
-    def factory(cls, **kwargs):
+    def factory(cls, *args, **kwargs):
         """
             This method returns a factory able to instantiate objects whenever needed
 
-        :param kwargs: Arguments dict for the class
+        :param args: List with class parameters
+        :param kwargs: Dictionary with class parameters
         :return: A factory function
         """
-        return make_factory_from(cls, **kwargs)
+        return make_factory_from(cls, *args, **kwargs)
 
     @abstractmethod
     def optimize(self):
