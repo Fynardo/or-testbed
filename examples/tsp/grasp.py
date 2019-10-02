@@ -37,10 +37,10 @@ class TSPGraspMove(base_move.Move):
 def compute_grasp_solution():
     tsp_solution_factory = TSPSolution.factory(tsp.initial_city)
     tsp_solver = base_grasp.GraspConstruct(tsp, alpha=0.0, solution_factory=tsp_solution_factory, grasp_move=TSPGraspMove)
-    feasible, solution = tsp_solver.solve()
-    return feasible, solution
+    task = tsp_solver.solve()
+    return task.solution
 
 
 if __name__ == '__main__':
-    feasible, solution = compute_grasp_solution()
+    solution = compute_grasp_solution()
     print('Salesman will visit: {}'.format(solution.cities))

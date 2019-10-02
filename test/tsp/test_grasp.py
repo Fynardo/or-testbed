@@ -17,18 +17,18 @@ def test_greedy_grasp():
     # Full greedy, bad solutions
     alpha = 0.0
     tsp_solver = base_grasp.GraspConstruct(tsp_instance, alpha=alpha, solution_factory=tsp_solution_factory, grasp_move=TSPGraspMove)
-    feasible, solution = tsp_solver.solve()
-    assert feasible is True
-    assert solution.objective == 34  # TODO no magic numbers pls
+    task = tsp_solver.solve()
+    assert task.is_feasible is True
+    assert task.solution.objective == 34  # TODO no magic numbers pls
 
 
 def test_random_grasp():
     # Full random, even worst solutions
     alpha = 1.0
     tsp_solver = base_grasp.GraspConstruct(tsp_instance, alpha=alpha, solution_factory=tsp_solution_factory, grasp_move=TSPGraspMove)
-    feasible, solution = tsp_solver.solve()
-    assert feasible is True
-    assert solution.objective == 43  # TODO no magic numbers pls
+    task = tsp_solver.solve()
+    assert task.is_feasible is True
+    assert task.solution.objective == 43  # TODO no magic numbers pls
 
 
 def test_grasp_multistart():
@@ -36,7 +36,7 @@ def test_grasp_multistart():
 
     tsp_grasp_factory = base_grasp.GraspConstruct.factory(instance=tsp_instance, alpha=0.3, solution_factory=tsp_solution_factory, grasp_move=TSPGraspMove, debug=False)
     tsp_multistart = base_grasp.MultiStartGraspConstruct(iters=25, inner_grasp_factory=tsp_grasp_factory)
-    feasible, solution = tsp_multistart.solve()
+    task = tsp_multistart.solve()
 
-    assert feasible is True
-    assert solution.objective == 17  # TODO no magic numbers pls
+    assert task.is_feasible is True
+    assert task.solution.objective == 17  # TODO no magic numbers pls

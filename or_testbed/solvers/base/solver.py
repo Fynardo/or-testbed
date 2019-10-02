@@ -4,6 +4,7 @@ import time
 from abc import abstractmethod, ABC
 from or_testbed.utils.logger import Logger, LogLevel
 from or_testbed.solvers.factory import make_factory_from
+import or_testbed.entities.task as task
 import copy
 
 
@@ -30,7 +31,7 @@ class Solver(ABC):
         feasible, solution = self.optimize()
         end = time.time() - start
         self.logger.log(LogLevel.RESULT, '{solver} Done! Finished in {time} seconds. Objective: {obj}. Feasible: {feasible}\n', solver=self.name,  time=round(end, 8), obj=solution.objective, feasible=feasible)
-        return feasible, solution
+        return task.Task(solution, feasible, end)
 
     @classmethod
     def factory(cls, *args, **kwargs):
@@ -69,13 +70,13 @@ class MultiStartSolver:
         start = time.time()
         for current_iter in range(self.iters):
             inner_solver = self.inner_solver_factory()
-            feasible, current_solution = inner_solver.solve()
+            inner_task = inner_solver.solve()
 
-            if self.best_sol['solution'] is None or current_solution.compare_to(self.best_sol['solution']) > 0:
-                self.best_sol['feasible'] = feasible
-                self.best_sol['solution'] = copy.deepcopy(current_solution)
-                self.logger.log(LogLevel.DEBUG, 'Iter {}. Solution Improved. New obj: {}.', current_iter, current_solution.objective)
+            if self.best_sol['solution'] is None or inner_task.solution.compare_to(self.best_sol['solution']) > 0:
+                self.best_sol['feasible'] = inner_task.is_feasible
+                self.best_sol['solution'] = copy.deepcopy(inner_task.solution)
+                self.logger.log(LogLevel.DEBUG, 'Iter {}. Solution Improved. New obj: {}.', current_iter, inner_task.solution.objective)
 
         end = time.time() - start
         self.logger.log(LogLevel.RESULT, '{solver} Done! Finished in {time} seconds. Objective: {obj}. Feasible: {feasible}\n', solver=self.name, time=round(end, 8), obj=self.best_sol['solution'].objective, feasible=self.best_sol['feasible'])
-        return self.best_sol['feasible'], self.best_sol['solution']
+        return task.Task(self.best_sol['solution'], self.best_sol['feasible'], end)
