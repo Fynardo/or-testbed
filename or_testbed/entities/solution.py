@@ -2,10 +2,10 @@
 
 import json
 from abc import ABC, abstractmethod
-from or_testbed.solvers.factory import make_factory_from
+from or_testbed.solvers.factory import FactoryMixin
 
 
-class Solution(ABC):
+class Solution(FactoryMixin, ABC):
     """
         Solution objects store the proper solution structure of the problem being solved. Also, some logic is implemented, like checking if the solution
         is feasible and calculating the objective value (usually the cost function).
@@ -15,10 +15,6 @@ class Solution(ABC):
 
     def __init__(self, objective=0):
         self.objective = objective
-
-    @classmethod
-    def factory(cls, *args, **kwargs):
-        return make_factory_from(cls, *args, **kwargs)
 
     @abstractmethod
     def is_feasible(self, in_instance):

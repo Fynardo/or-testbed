@@ -3,11 +3,11 @@
 import time
 from abc import abstractmethod, ABC
 from or_testbed.utils.logger import Logger, LogLevel
-from or_testbed.solvers.factory import make_factory_from
+from or_testbed.solvers.factory import FactoryMixin
 import copy
 
 
-class Solver(ABC):
+class Solver(FactoryMixin, ABC):
     """
         Base solver class.
 
@@ -32,23 +32,12 @@ class Solver(ABC):
         self.logger.log(LogLevel.RESULT, '{solver} Done! Finished in {time} seconds. Objective: {obj}. Feasible: {feasible}\n', solver=self.name,  time=round(end, 8), obj=solution.objective, feasible=feasible)
         return feasible, solution
 
-    @classmethod
-    def factory(cls, *args, **kwargs):
-        """
-            This method returns a factory able to instantiate objects whenever needed
-
-        :param args: List with class parameters
-        :param kwargs: Dictionary with class parameters
-        :return: A factory function
-        """
-        return make_factory_from(cls, *args, **kwargs)
-
     @abstractmethod
     def optimize(self):
         pass
 
 
-class MultiStartSolver:
+class MultiStartSolver(FactoryMixin):
     """
         Base multistart solver class.
 
