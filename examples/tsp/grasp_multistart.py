@@ -5,7 +5,7 @@
         GRASP Algorithm with a multistart approach
 """
 
-from definition import TSPInstance, TSPSolution, tsp
+from definition import TSPSolution, tsp
 from grasp import TSPGraspMove
 import or_testbed.solvers.grasp as base_grasp
 

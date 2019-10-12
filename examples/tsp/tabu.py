@@ -5,7 +5,7 @@
         Tabu Search with initial solution calculated with GRASP
 """
 
-from definition import TSPInstance, TSPSolution, SwapCitiesCandidate, SwapCitiesMove, tsp
+from definition import SwapCitiesMove, tsp
 from grasp import compute_grasp_solution
 import or_testbed.solvers.tabusearch as tabusearch
 

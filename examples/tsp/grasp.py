@@ -5,7 +5,7 @@
         GRASP Algorithm
 """
 
-from definition import TSPInstance, TSPSolution, tsp
+from definition import TSPSolution, tsp
 import or_testbed.solvers.grasp as base_grasp
 import or_testbed.entities.candidate as base_candidate
 import or_testbed.entities.move as base_move
