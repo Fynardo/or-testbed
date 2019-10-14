@@ -5,7 +5,7 @@ import random
 import pytest
 
 tsp_instance = TSPInstance('tsp_example', example_cities, example_initial_city)
-tsp_solution_factory = TSPSolution.factory(initial_city=tsp_instance.initial_city)
+tsp_solution_factory = TSPSolution.as_factory(initial_city=tsp_instance.initial_city)
 
 
 @pytest.fixture(autouse=True)
@@ -34,7 +34,7 @@ def test_random_grasp():
 def test_grasp_multistart():
     random.seed(12345)
 
-    tsp_grasp_factory = base_grasp.GraspConstruct.factory(instance=tsp_instance, alpha=0.3, solution_factory=tsp_solution_factory, grasp_move=TSPGraspMove, debug=False)
+    tsp_grasp_factory = base_grasp.GraspConstruct.as_factory(instance=tsp_instance, alpha=0.3, solution_factory=tsp_solution_factory, grasp_move=TSPGraspMove, debug=False)
     tsp_multistart = base_grasp.MultiStartGraspConstruct(iters=25, inner_grasp_factory=tsp_grasp_factory)
     task = tsp_multistart.solve()
 

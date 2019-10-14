@@ -5,7 +5,7 @@
         GRASP Algorithm
 """
 
-from definition import TSPInstance, TSPSolution, tsp
+from definition import TSPSolution, tsp
 import or_testbed.solvers.grasp as base_grasp
 import or_testbed.entities.candidate as base_candidate
 import or_testbed.entities.move as base_move
@@ -35,7 +35,7 @@ class TSPGraspMove(base_move.Move):
 
 
 def compute_grasp_solution():
-    tsp_solution_factory = TSPSolution.factory(tsp.initial_city)
+    tsp_solution_factory = TSPSolution.as_factory(tsp.initial_city)
     tsp_solver = base_grasp.GraspConstruct(tsp, alpha=0.0, solution_factory=tsp_solution_factory, grasp_move=TSPGraspMove)
     task = tsp_solver.solve()
     return task.solution
