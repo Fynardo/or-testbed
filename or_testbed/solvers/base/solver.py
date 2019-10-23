@@ -17,6 +17,7 @@ class Solver(FactoryMixin, ABC):
         To add new solvers, ``optimize`` method must be overriden, there's where all the solver logic lives.
 
     """
+
     def __init__(self, debug=True, log_file=None, log_level=LogLevel.ALL):
         self.logger = Logger(debug=debug, log_file=log_file, log_level=log_level)
         self.name = "BaseSolver"
@@ -30,7 +31,8 @@ class Solver(FactoryMixin, ABC):
         start = time.time()
         feasible, solution = self.optimize()
         end = time.time() - start
-        self.logger.log(LogLevel.RESULT, '{solver} Done! Finished in {time} seconds. Objective: {obj}. Feasible: {feasible}\n', solver=self.name,  time=round(end, 8), obj=solution.objective, feasible=feasible)
+        self.logger.log(LogLevel.RESULT, '{solver} Done! Finished in {time} seconds. Objective: {obj}. Feasible: {feasible}\n', solver=self.name, time=round(end, 8),
+                        obj=solution.objective if feasible else None, feasible=feasible)
         return task.Task(solution, feasible, end)
 
     @abstractmethod
@@ -47,6 +49,7 @@ class MultiStartSolver(FactoryMixin):
         It just executes a solver any given amount of times (``iters`` parameter) and returns the best result achieved.
 
     """
+
     def __init__(self, iters, inner_solver_factory, debug=True, log_file=None, log_level=LogLevel.ALL):
         self.logger = Logger(debug=debug, log_file=log_file, log_level=log_level)
         self.name = 'IteratedBase'
@@ -61,11 +64,13 @@ class MultiStartSolver(FactoryMixin):
             inner_solver = self.inner_solver_factory()
             inner_task = inner_solver.solve()
 
-            if self.best_sol['solution'] is None or inner_task.solution.compare_to(self.best_sol['solution']) > 0:
-                self.best_sol['feasible'] = inner_task.is_feasible
-                self.best_sol['solution'] = copy.deepcopy(inner_task.solution)
-                self.logger.log(LogLevel.DEBUG, 'Iter {}. Solution Improved. New obj: {}.', current_iter, inner_task.solution.objective)
+            if inner_task.is_feasible:
+                if self.best_sol['solution'] is None or inner_task.solution.compare_to(self.best_sol['solution']) > 0:
+                    self.best_sol['feasible'] = inner_task.is_feasible
+                    self.best_sol['solution'] = copy.deepcopy(inner_task.solution)
+                    self.logger.log(LogLevel.DEBUG, 'Iter {}. Solution Improved. New obj: {}.', current_iter, inner_task.solution.objective)
 
         end = time.time() - start
-        self.logger.log(LogLevel.RESULT, '{solver} Done! Finished in {time} seconds. Objective: {obj}. Feasible: {feasible}\n', solver=self.name, time=round(end, 8), obj=self.best_sol['solution'].objective, feasible=self.best_sol['feasible'])
+        self.logger.log(LogLevel.RESULT, '{solver} Done! Finished in {time} seconds. Objective: {obj}. Feasible: {feasible}\n', solver=self.name, time=round(end, 8),
+                        obj=self.best_sol['solution'].objective if self.best_sol['feasible'] else None, feasible=self.best_sol['feasible'])
         return task.Task(self.best_sol['solution'], self.best_sol['feasible'], end)
