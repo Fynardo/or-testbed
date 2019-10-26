@@ -36,6 +36,13 @@ class Solution(FactoryMixin, ABC):
         """
         pass
 
+    def update_objective(self, in_instance):
+        """
+            Calculates and updates solution objective
+        :param in_instance: Problem instance with useful information.
+        """
+        self.set_objective(self.calculate_objective(in_instance))
+
     def set_objective(self, in_objective):
         """
             Simple setter for the objective value of the solution.

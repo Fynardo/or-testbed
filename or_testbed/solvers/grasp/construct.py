@@ -88,7 +88,7 @@ class GraspConstruct(base_solver.Solver):
             candidate = neighborhood.select_candidate(neighborhood.strategy_factory('random'), rcl, self.solution, self.instance)
             self.grasp_move.apply(candidate, self.solution)
             # self._add_candidate(candidate)
-            self.solution.set_objective(self.solution.calculate_objective(self.instance))
+            self.solution.update_objective(self.instance)
             candidates = self.grasp_move.make_neighborhood(self.solution, self.instance)
 
         feasible = self.solution.is_feasible(self.instance)

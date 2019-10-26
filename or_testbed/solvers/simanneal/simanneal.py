@@ -55,7 +55,7 @@ class SimAnneal(base_solver.Solver):
         :return: The new neighbor solution.
         """
         new_sol = next_mov.apply(candidate, in_solution)
-        new_sol.set_objective(new_sol.calculate_objective(self.instance))
+        new_sol.update_objective(self.instance)
         return new_sol
 
     def optimize(self):

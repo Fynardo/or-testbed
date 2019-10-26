@@ -53,7 +53,7 @@ class TabuSearch(base_solver.Solver):
                 self.logger.log(LogLevel.DEBUG, 'Iter {}. Candidate: {} ({})', iter, candidate, cost)
                 self.tabu.append(candidate)
                 current_sol = next_mov_class.apply(candidate, current_sol)
-                current_sol.set_objective(current_sol.calculate_objective(self.instance))
+                current_sol.update_objective(self.instance)
 
                 if current_sol.compare_to(best_sol) > 0:
                     best_sol = copy.deepcopy(current_sol)
