@@ -6,6 +6,7 @@ from or_testbed.utils.logger import Logger, LogLevel
 import or_testbed.entities.task as task
 from or_testbed.solvers.factory import FactoryMixin
 import copy
+import logging
 
 
 class Solver(FactoryMixin, ABC):
@@ -31,8 +32,9 @@ class Solver(FactoryMixin, ABC):
         start = time.time()
         feasible, solution = self.optimize()
         end = time.time() - start
-        self.logger.log(LogLevel.RESULT, '{solver} Done! Finished in {time} seconds. Objective: {obj}. Feasible: {feasible}\n', solver=self.name, time=round(end, 8),
-                        obj=solution.objective if feasible else None, feasible=feasible)
+        #self.logger.log(LogLevel.RESULT, '{solver} Done! Finished in {time} seconds. Objective: {obj}. Feasible: {feasible}\n', solver=self.name, time=round(end, 8),
+        #                obj=solution.objective if feasible else None, feasible=feasible)
+        logging.info('%s Done! Finished in %s seconds. Objective: %s. Feasible: %s\n', self.name, round(end, 4), solution.objective if feasible else None, feasible)
         return task.Task(solution, feasible, end)
 
     @abstractmethod
